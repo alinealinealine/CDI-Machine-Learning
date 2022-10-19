@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+This file is to:
+    1.Drop variables with too much missing
+    2.Impute the missing data in master file
+    
+Created on Wed Oct 19 16:20:51 2022
+
+@author: weng
+"""
+
+#% install packages
+pip install missingno
+
+#% import the packages
+import numpy as np
+import pandas as pd
+import missingno as msno
+
+#% import data: merged portfolio + aimm + gap + wdi
+df = pd.read_csv("Data/master.csv")
+
+#% describe the data (missing value and distribution)
+nomi = df.isna().sum() < df.shape[0]/2 #% clean missing data: drop variables with 50% missing.
+nomi.value_counts() # 458 availables left
+
+df = df.loc[:,nomi] #deleted the features with too much missing data
+dfn = df.select_dtypes(include='number') 
+dfs = df.select_dtypes(include='object') 
+
+# impute all numerical data with the multivariate feature imputation
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
+from sklearn.model_selection import train_test_split
+
+train,test = train_test_split(dfn,train_size = 0.25)
+del test
+imp.fit(train)
+dfn_imp = np.round(imp.transform(dfn))
+
+# impute categorical data with univariate feature imputation
+from sklearn.impute import SimpleImputer
+
+imp = SimpleImputer(strategy="most_frequent")
+dfs_imp = imp.fit_transform(dfs)
+
+# update the master data with all imputed results
+df_imp = pd.DataFrame(np.hstack((dfs_imp,dfn_imp)))
+df_imp.to_csv("Data/master_impute.csv")
