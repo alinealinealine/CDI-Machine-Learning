@@ -29,6 +29,8 @@ df = df.loc[:,nomi] #deleted the features with too much missing data
 dfn = df.select_dtypes(include='number') 
 dfs = df.select_dtypes(include='object') 
 
+co_df_imp = np.hstack((dfs.columns.values,dfn.columns.values))
+
 # impute all numerical data with the multivariate feature imputation
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
@@ -47,4 +49,5 @@ dfs_imp = imp.fit_transform(dfs)
 
 # update the master data with all imputed results
 df_imp = pd.DataFrame(np.hstack((dfs_imp,dfn_imp)))
+df_imp.columns = co_df_imp
 df_imp.to_csv("Data/master_impute.csv")
